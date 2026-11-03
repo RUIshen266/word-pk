@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>单词PK · 词库后台</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .admin-wrap{max-width:760px;width:100%;margin:0 auto;padding:24px 18px 60px}
+    .admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+    .admin-head h1{font-size:24px;margin:0;font-weight:800}
+    .admin-head .sub{font-size:13px;color:var(--muted)}
+    #loginView{min-height:80vh;display:flex;align-items:center;justify-content:center}
+    .login-box{max-width:380px;width:100%;text-align:center}
+    .login-box .panel{padding:30px}
+    .admin-banner{display:none;background:rgba(248,113,113,.12);border:1px solid var(--bad);color:#ffd9d9;
+      padding:10px 14px;border-radius:12px;font-size:13px;margin-bottom:16px}
+    .bank-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+    .bank-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);
+      border-radius:14px;padding:12px 14px;flex-wrap:wrap}
+    .bank-item .bi-name{font-weight:700;font-size:15px;flex:1;min-width:140px}
+    .bank-item .bi-count{font-size:13px;color:var(--muted)}
+    .bank-item .bi-note{width:100%;font-size:12px;color:var(--muted);margin-top:2px}
+    .bank-item .bi-actions{display:flex;gap:8px;margin-left:auto}
+    .mini-btn{cursor:pointer;border:1px solid var(--border);background:var(--panel-solid);color:var(--text);
+      padding:7px 13px;border-radius:10px;font-size:13px;font-family:inherit}
+    .mini-btn:hover{border-color:var(--accent)}
+    .mini-btn.danger:hover{border-color:var(--bad);color:#ffd9d9}
+    .mini-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#06122e;border:none;font-weight:700}
+    .editor{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:20px}
+    .editor h3{margin:0 0 14px;font-size:17px}
+    .editor textarea{min-height:180px}
+    .editor .row{display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap}
+    .hint-sm{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.6}
+    .empty{text-align:center;color:var(--muted);padding:24px;font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="admin-wrap">
+    <!-- 登录 -->
+    <section id="loginView">
+      <div class="login-box">
+        <div class="panel">
+          <h2 style="margin:0 0 6px">🔐 词库后台</h2>
+          <p class="sub" style="margin:0 0 18px;color:var(--muted);font-size:13px">需要密码才能管理预设词库</p>
+          <input id="pw" class="text-input" type="password" placeholder="请输入管理员密码" />
+          <button class="big-btn primary" id="btnLogin" style="margin-top:14px">登录</button>
+          <p id="loginErr" style="color:var(--bad);font-size:13px;min-height:18px;margin:10px 0 0"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 管理 -->
+    <section id="adminView" style="display:none">
+      <div class="admin-head">
+        <div>
+          <h1>词库后台</h1>
+          <div class="sub">管理创建页的预设词库（四六级 / 雅思 / 考研等）</div>
+        </div>
+        <button class="mini-btn" id="btnLogout">退出登录</button>
+      </div>
+
+      <div class="admin-banner" id="adminBanner"></div>
+
+      <!-- 编辑 / 新建 -->
+      <div class="editor">
+        <h3 id="editorTitle">新建词库</h3>
+        <label class="lbl">词库名称</label>
+        <input id="bankName" class="text-input" maxlength="40" placeholder="例如：考研·红宝书乱序2026" />
+        <label class="lbl">单词（每行一个，支持 英文,中文 或 英文 中文）</label>
+        <textarea id="bankText" placeholder="abandon,放弃&#10;ability,能力&#10;apple 苹果"></textarea>
+        <p class="hint-sm">说明：红宝书等版权书请粘贴你自己手上的正版内容，本程序不内置原书词表。</p>
+        <label class="lbl">备注（可选，会显示在创建页按钮上）</label>
+        <input id="bankNote" class="text-input" maxlength="60" placeholder="例如：请在创建页点击后直接使用" />
+        <div class="row">
+          <button class="mini-btn primary" id="btnSave">保存</button>
+          <button class="mini-btn" id="btnCancel" style="display:none">取消编辑</button>
+          <span id="editorMsg" style="font-size:13px;color:var(--accent2)"></span>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px;margin:6px 0 12px">现有词库</h3>
+      <div class="bank-list" id="bankList"></div>
+      <div class="empty" id="bankEmpty" style="display:none">还没有词库，先在上方新建一个吧。</div>
+    </section>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    const $ = (s) => document.querySelector(s);
+    // token 作为查询参数传递（平台可能剥离 Authorization 头，故不使用请求头）
+    const API = (p) => {
+      let u = p + (location.search || '');
+      if (token) u += (u.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(token);
+      return u;
+    };
+    let token = localStorage.getItem('wordpk_admin_token') || '';
+    let editingId = null;
+
+    function showBanner(msg) { const b = $('#adminBanner'); b.textContent = msg; b.style.display = msg ? 'block' : 'none'; }
+
+    // 没有 sharecode 时平台可能拦截动态接口，提示用户
+    if (!/sharecode=/.test(location.search)) {
+      showBanner('提示：请通过带 ?sharecode= 的链接打开本后台（与游戏链接相同），否则接口可能被拦截。');
+    }
+
+    async function api(path, opts) {
+      const res = await fetch(API(path), opts);
+      let data = null;
+      try { data = await res.json(); } catch (_) {}
+      return { res, data };
+    }
+
+    async function login() {
+      const pw = $('#pw').value;
+      const { res, data } = await api('/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+      if (res.ok && data && data.token) {
+        token = data.token;
+        localStorage.setItem('wordpk_admin_token', token);
+        $('#loginErr').textContent = '';
+        enterAdmin();
+      } else {
+        $('#loginErr').textContent = (data && data.error) || '登录失败';
+      }
+    }
+
+    async function enterAdmin() {
+      $('#loginView').style.display = 'none';
+      $('#adminView').style.display = 'block';
+      await loadBanks();
+    }
+
+    async function loadBanks() {
+      const { res, data } = await api('/admin/presets', { headers: { 'Content-Type': 'application/json' } });
+      if (res.status === 401) { // token 过期
+        token = ''; localStorage.removeItem('wordpk_admin_token');
+        $('#loginView').style.display = 'block'; $('#adminView').style.display = 'none';
+        $('#loginErr').textContent = '登录已过期，请重新登录';
+        return;
+      }
+      const banks = (data && data.banks) || [];
+      const list = $('#bankList');
+      list.innerHTML = '';
+      $('#bankEmpty').style.display = banks.length ? 'none' : 'block';
+      banks.forEach((b) => {
+        const item = document.createElement('div');
+        item.className = 'bank-item';
+        item.innerHTML = `
+          <div class="bi-name">${escapeHtml(b.name)}</div>
+          <div class="bi-count">${b.words ? b.words.length : 0} 词</div>
+          ${b.note ? `<div class="bi-note">📝 ${escapeHtml(b.note)}</div>` : ''}
+          <div class="bi-actions">
+            <button class="mini-btn" data-act="edit" data-id="${b.id}">编辑</button>
+            <button class="mini-btn danger" data-act="del" data-id="${b.id}">删除</button>
+          </div>`;
+        list.appendChild(item);
+      });
+      list.querySelectorAll('[data-act]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          if (btn.getAttribute('data-act') === 'edit') startEdit(id, banks);
+          else doDelete(id);
+        });
+      });
+    }
+
+    function startEdit(id, banks) {
+      const b = banks.find((x) => x.id === id);
+      if (!b) return;
+      editingId = id;
+      $('#editorTitle').textContent = '编辑词库：' + b.name;
+      $('#bankName').value = b.name;
+      $('#bankText').value = (b.words || []).map((w) => w.en + ',' + w.zh).join('\n');
+      $('#bankNote').value = b.note || '';
+      $('#btnCancel').style.display = '';
+      $('#editorMsg').textContent = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetEditor() {
+      editingId = null;
+      $('#editorTitle').textContent = '新建词库';
+      $('#bankName').value = '';
+      $('#bankText').value = '';
+      $('#bankNote').value = '';
+      $('#btnCancel').style.display = 'none';
+      $('#editorMsg').textContent = '';
+    }
+
+    async function save() {
+      const name = $('#bankName').value.trim();
+      const text = $('#bankText').value;
+      const note = $('#bankNote').value.trim();
+      if (!name) { $('#editorMsg').textContent = '请填写词库名称'; return; }
+      const body = JSON.stringify({ name, text, note });
+      let r;
+      if (editingId) {
+        r = await api('/admin/presets/' + editingId, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body });
+      } else {
+        r = await api('/admin/presets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+      }
+      if (r.res.ok) {
+        $('#editorMsg').textContent = '已保存 ✓';
+        resetEditor();
+        await loadBanks();
+      } else {
+        $('#editorMsg').textContent = (r.data && r.data.error) || '保存失败';
+      }
+    }
+
+    async function doDelete(id) {
+      if (!confirm('确定删除该词库？此操作不可撤销。')) return;
+      const r = await api('/admin/presets/' + id, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+      if (r.res.ok) { await loadBanks(); }
+      else { showBanner((r.data && r.data.error) || '删除失败'); }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    $('#btnLogin').addEventListener('click', login);
+    $('#pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+    $('#btnLogout').addEventListener('click', () => { token = ''; localStorage.removeItem('wordpk_admin_token'); $('#loginView').style.display = 'block'; $('#adminView').style.display = 'none'; });
+    $('#btnSave').addEventListener('click', save);
+    $('#btnCancel').addEventListener('click', resetEditor);
+
+    // 启动：若已有 token 则尝试进入
+    if (token) { enterAdmin(); }
+  })();
+  </script>
+</body>
+</html>

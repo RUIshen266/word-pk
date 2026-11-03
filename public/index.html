@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>单词PK · Word Duel</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="grid"></div>
+  <div id="conn" class="conn">连接中…</div>
+
+  <!-- ============ 首页 ============ -->
+  <section class="screen active" id="screen-home">
+    <div class="hero">
+      <h1>单词<span>PK</span></h1>
+      <p>导入你的词库 · 开个房间 · 把链接发给对手，两人实时在线对战。</p>
+      <p class="hint">看英文选中文，选项全是真实释义当干扰项，蒙不出来 · 键盘 1-4 选答案，空格下一题</p>
+    </div>
+    <div class="home-btns">
+      <button class="big-btn primary" id="btnGoCreate">创建房间<small>导入词库，生成分享链接</small></button>
+      <button class="big-btn" id="btnGoJoin">加入房间<small>输入房间号 / 房间名</small></button>
+    </div>
+    <button class="link-btn" id="btnGoLb">🏆 排行榜</button>
+    <button class="link-btn" id="btnAdmin">⚙ 词库后台</button>
+  </section>
+
+  <!-- ============ 创建房间 ============ -->
+  <section class="screen" id="screen-create">
+    <div class="panel">
+      <div class="panel-head">
+        <button class="back" id="btnCreateBack">‹</button>
+        <h2>创建房间</h2>
+      </div>
+
+      <label class="lbl">词库（每行一个，支持英文,中文 或 英文 中文）</label>
+      <div class="preset-row" id="presetRow">
+        <span class="parse-info">预设词库加载中…</span>
+      </div>
+      <textarea id="wordsInput" placeholder="apple,苹果&#10;banana 香蕉&#10;orange,橙子"></textarea>
+      <div class="row-between">
+        <span id="parseInfo" class="parse-info"></span>
+        <label class="file-btn">📂 上传文件<input type="file" id="fileInput" accept=".txt,.csv,.xlsx,.xls" hidden /></label>
+      </div>
+
+      <label class="lbl">自定义房间名（可选，更易记，4-12 字）</label>
+      <input id="roomName" class="text-input" maxlength="12" placeholder="例如：英语对决 或 ENGLISH01" />
+
+      <label class="lbl">你的昵称</label>
+      <input id="hostName" class="text-input" maxlength="12" placeholder="玩家1" />
+
+      <div class="settings">
+        <div class="set">
+          <label>题目数</label>
+          <input id="qTotal" type="number" min="1" max="50" value="10" />
+        </div>
+        <div class="set">
+          <label>每题秒数</label>
+          <input id="qSec" type="number" min="4" max="30" value="10" />
+        </div>
+      </div>
+
+      <button class="big-btn primary" id="btnCreate">创建并生成链接</button>
+    </div>
+  </section>
+
+  <!-- ============ 加入房间 ============ -->
+  <section class="screen" id="screen-join">
+    <div class="panel">
+      <div class="panel-head">
+        <button class="back" id="btnJoinBack">‹</button>
+        <h2>加入房间</h2>
+      </div>
+      <label class="lbl">房间号 或 房间名</label>
+      <input id="joinRoom" class="text-input big" maxlength="12" placeholder="例如：AB3K 或 英语对决" />
+      <label class="lbl">你的昵称</label>
+      <input id="joinName" class="text-input" maxlength="12" placeholder="玩家2" />
+      <button class="big-btn primary" id="btnJoin">加入</button>
+    </div>
+  </section>
+
+  <!-- ============ 等待页 ============ -->
+  <section class="screen" id="screen-wait">
+    <div class="panel wait-panel">
+      <h2 id="waitTitle">房间已创建</h2>
+      <div class="room-box">
+        <div class="room-line">房间号 <b id="roomCode">----</b></div>
+        <div class="room-line" id="aliasLine" style="display:none">房间名 <b id="aliasCode"></b></div>
+        <div class="room-line players">
+          <span class="chip" id="chipHost">房主 <b id="hostNameShow">玩家1</b></span>
+          <span class="chip off" id="chipGuest">客人 <b id="guestNameShow">等待加入…</b></span>
+        </div>
+      </div>
+      <label class="lbl">把链接发给对手（自动带房间号/名）</label>
+      <div class="share-row">
+        <input id="shareLink" class="text-input" readonly />
+        <button class="copy" id="btnCopy">复制</button>
+      </div>
+      <button class="big-btn primary" id="btnStart" disabled>开始 PK</button>
+      <button class="link-btn" id="btnWaitBack">离开</button>
+    </div>
+  </section>
+
+  <!-- ============ 对战页 ============ -->
+  <section class="screen" id="screen-game">
+    <div class="scoreboard">
+      <div class="score-box" id="sbHost">
+        <div class="sb-name" id="sbHostName">房主</div>
+        <div class="sb-score" id="sbHostScore">0</div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="score-box" id="sbGuest">
+        <div class="sb-name" id="sbGuestName">客人</div>
+        <div class="sb-score" id="sbGuestScore">0</div>
+      </div>
+    </div>
+    <div class="qmeta"><span id="qProgress">1 / 10</span></div>
+    <div class="timer"><div class="timer-fill" id="timerFill"></div></div>
+    <div class="qword" id="qWord">word</div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="opp-status" id="oppStatus">对手思考中…</div>
+  </section>
+
+  <!-- ============ 结算页 ============ -->
+  <section class="screen" id="screen-over">
+    <div class="panel over-panel">
+      <div class="winner" id="winnerBanner">🏆 你赢了！</div>
+      <div class="final">
+        <div class="final-box"><div class="fb-name" id="fsHostName">房主</div><div class="fb-score" id="fsHostScore">0</div></div>
+        <div class="final-box"><div class="fb-name" id="fsGuestName">客人</div><div class="fb-score" id="fsGuestScore">0</div></div>
+      </div>
+
+      <div class="wrong-card">
+        <div class="wrong-head">我的错题本 <span id="wrongCount" class="badge">0</span></div>
+        <div id="wrongList" class="wrong-list"></div>
+        <button class="big-btn" id="btnExportWord">⬇ 导出错题为 Word</button>
+        <p class="wrong-tip" id="wrongTip"></p>
+      </div>
+
+      <button class="big-btn primary" id="btnAgain">再来一局</button>
+      <button class="link-btn" id="btnViewLb">🏆 查看排行榜</button>
+      <button class="link-btn" id="btnOverHome">返回首页</button>
+    </div>
+  </section>
+
+  <!-- ============ 排行榜 ============ -->
+  <section class="screen" id="screen-leaderboard">
+    <div class="panel">
+      <div class="panel-head">
+        <button class="back" id="btnLbBack">‹</button>
+        <h2>🏆 排行榜</h2>
+      </div>
+      <p class="lb-note">累计积分排名 · 数据保存在服务器（重新发布可能清空）</p>
+      <div class="lb-wrap">
+        <table class="lb-table" id="lbTable">
+          <thead><tr><th>排名</th><th>玩家</th><th>总分</th><th>胜/局</th><th>平均用时</th></tr></thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+        <div id="lbEmpty" class="lb-empty">还没有战绩，去 PK 一局吧！</div>
+      </div>
+      <button class="link-btn" id="btnLbHome">返回首页</button>
+    </div>
+  </section>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="client.js"></script>
+</body>
+</html>

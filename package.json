@@ -1,0 +1,12 @@
+{
+  "name": "word-pk-online",
+  "version": "1.0.0",
+  "description": "联网实时单词PK对战",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.22.1"
+  }
+}

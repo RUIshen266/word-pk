@@ -1,0 +1,20 @@
+# 依赖（平台会自行 npm install）
+node_modules/
+
+# WorkBuddy 项目元数据
+.workbuddy/
+.wbapp*.genie
+
+# 运行时生成的数据（部署后自动产生）
+leaderboard.json
+backups/
+
+# 日志
+*.log
+
+# 开发期临时测试脚本（非部署必需）
+admin_test.js
+pub_admin_verify.js
+scoretest.js
+test.js
+restarttest.js

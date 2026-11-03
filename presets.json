@@ -1,0 +1,1026 @@
+[
+  {
+    "id": "cet",
+    "name": "四六级通用高频词（示例）",
+    "words": [
+      {
+        "en": "abandon",
+        "zh": "放弃"
+      },
+      {
+        "en": "ability",
+        "zh": "能力"
+      },
+      {
+        "en": "absolute",
+        "zh": "绝对的"
+      },
+      {
+        "en": "absorb",
+        "zh": "吸收"
+      },
+      {
+        "en": "abuse",
+        "zh": "滥用"
+      },
+      {
+        "en": "academic",
+        "zh": "学术的"
+      },
+      {
+        "en": "accelerate",
+        "zh": "加速"
+      },
+      {
+        "en": "accent",
+        "zh": "口音"
+      },
+      {
+        "en": "access",
+        "zh": "接近；使用权"
+      },
+      {
+        "en": "accident",
+        "zh": "事故"
+      },
+      {
+        "en": "accompany",
+        "zh": "陪伴"
+      },
+      {
+        "en": "accomplish",
+        "zh": "完成"
+      },
+      {
+        "en": "accurate",
+        "zh": "准确的"
+      },
+      {
+        "en": "achieve",
+        "zh": "实现"
+      },
+      {
+        "en": "acquire",
+        "zh": "获得"
+      },
+      {
+        "en": "adapt",
+        "zh": "适应"
+      },
+      {
+        "en": "adequate",
+        "zh": "充足的"
+      },
+      {
+        "en": "adjust",
+        "zh": "调整"
+      },
+      {
+        "en": "administration",
+        "zh": "管理"
+      },
+      {
+        "en": "admit",
+        "zh": "承认"
+      },
+      {
+        "en": "adopt",
+        "zh": "采用"
+      },
+      {
+        "en": "adult",
+        "zh": "成年人"
+      },
+      {
+        "en": "advance",
+        "zh": "前进"
+      },
+      {
+        "en": "advantage",
+        "zh": "优势"
+      },
+      {
+        "en": "adventure",
+        "zh": "冒险"
+      },
+      {
+        "en": "advocate",
+        "zh": "提倡"
+      },
+      {
+        "en": "affair",
+        "zh": "事务"
+      },
+      {
+        "en": "affect",
+        "zh": "影响"
+      },
+      {
+        "en": "agency",
+        "zh": "机构"
+      },
+      {
+        "en": "agenda",
+        "zh": "议程"
+      },
+      {
+        "en": "alcohol",
+        "zh": "酒精"
+      },
+      {
+        "en": "ambitious",
+        "zh": "有雄心的"
+      },
+      {
+        "en": "analyze",
+        "zh": "分析"
+      },
+      {
+        "en": "ancient",
+        "zh": "古代的"
+      },
+      {
+        "en": "announce",
+        "zh": "宣布"
+      },
+      {
+        "en": "annoy",
+        "zh": "使恼怒"
+      },
+      {
+        "en": "annual",
+        "zh": "年度的"
+      },
+      {
+        "en": "anticipate",
+        "zh": "预期"
+      },
+      {
+        "en": "anxiety",
+        "zh": "焦虑"
+      },
+      {
+        "en": "apologize",
+        "zh": "道歉"
+      },
+      {
+        "en": "apparent",
+        "zh": "明显的"
+      },
+      {
+        "en": "appeal",
+        "zh": "呼吁"
+      },
+      {
+        "en": "appearance",
+        "zh": "外表"
+      },
+      {
+        "en": "apply",
+        "zh": "申请"
+      },
+      {
+        "en": "appreciate",
+        "zh": "欣赏"
+      },
+      {
+        "en": "approach",
+        "zh": "方法；接近"
+      },
+      {
+        "en": "appropriate",
+        "zh": "合适的"
+      },
+      {
+        "en": "approve",
+        "zh": "批准"
+      },
+      {
+        "en": "architecture",
+        "zh": "建筑"
+      },
+      {
+        "en": "argue",
+        "zh": "争论"
+      },
+      {
+        "en": "arise",
+        "zh": "出现"
+      },
+      {
+        "en": "arouse",
+        "zh": "唤起"
+      },
+      {
+        "en": "article",
+        "zh": "文章"
+      },
+      {
+        "en": "artificial",
+        "zh": "人造的"
+      },
+      {
+        "en": "assembly",
+        "zh": "集会"
+      },
+      {
+        "en": "assess",
+        "zh": "评估"
+      },
+      {
+        "en": "assign",
+        "zh": "分配"
+      },
+      {
+        "en": "assist",
+        "zh": "协助"
+      },
+      {
+        "en": "associate",
+        "zh": "联想"
+      },
+      {
+        "en": "assume",
+        "zh": "假设"
+      },
+      {
+        "en": "assure",
+        "zh": "确保"
+      },
+      {
+        "en": "athlete",
+        "zh": "运动员"
+      },
+      {
+        "en": "atmosphere",
+        "zh": "大气"
+      },
+      {
+        "en": "attitude",
+        "zh": "态度"
+      },
+      {
+        "en": "attract",
+        "zh": "吸引"
+      },
+      {
+        "en": "audience",
+        "zh": "观众"
+      },
+      {
+        "en": "authentic",
+        "zh": "真实的"
+      },
+      {
+        "en": "authority",
+        "zh": "权威"
+      },
+      {
+        "en": "automatic",
+        "zh": "自动的"
+      },
+      {
+        "en": "available",
+        "zh": "可用的"
+      },
+      {
+        "en": "average",
+        "zh": "平均的"
+      },
+      {
+        "en": "avoid",
+        "zh": "避免"
+      },
+      {
+        "en": "award",
+        "zh": "奖励"
+      },
+      {
+        "en": "aware",
+        "zh": "意识到的"
+      },
+      {
+        "en": "awkward",
+        "zh": "尴尬的"
+      },
+      {
+        "en": "barrier",
+        "zh": "障碍"
+      },
+      {
+        "en": "benefit",
+        "zh": "利益"
+      },
+      {
+        "en": "betray",
+        "zh": "背叛"
+      },
+      {
+        "en": "bore",
+        "zh": "使厌烦"
+      }
+    ],
+    "note": ""
+  },
+  {
+    "id": "ielts",
+    "name": "雅思通用高频词（示例）",
+    "words": [
+      {
+        "en": "abolish",
+        "zh": "废除"
+      },
+      {
+        "en": "abstract",
+        "zh": "抽象的"
+      },
+      {
+        "en": "abundant",
+        "zh": "丰富的"
+      },
+      {
+        "en": "accumulate",
+        "zh": "积累"
+      },
+      {
+        "en": "acknowledge",
+        "zh": "承认"
+      },
+      {
+        "en": "adjacent",
+        "zh": "邻近的"
+      },
+      {
+        "en": "adverse",
+        "zh": "不利的"
+      },
+      {
+        "en": "aesthetic",
+        "zh": "美学的"
+      },
+      {
+        "en": "affluent",
+        "zh": "富裕的"
+      },
+      {
+        "en": "allocate",
+        "zh": "分配"
+      },
+      {
+        "en": "ambiguous",
+        "zh": "模糊的"
+      },
+      {
+        "en": "analogy",
+        "zh": "类比"
+      },
+      {
+        "en": "arbitrary",
+        "zh": "武断的"
+      },
+      {
+        "en": "autonomous",
+        "zh": "自治的"
+      },
+      {
+        "en": "bias",
+        "zh": "偏见"
+      },
+      {
+        "en": "boundary",
+        "zh": "边界"
+      },
+      {
+        "en": "capable",
+        "zh": "有能力的"
+      },
+      {
+        "en": "category",
+        "zh": "类别"
+      },
+      {
+        "en": "cease",
+        "zh": "停止"
+      },
+      {
+        "en": "coherent",
+        "zh": "连贯的"
+      },
+      {
+        "en": "coincide",
+        "zh": "巧合"
+      },
+      {
+        "en": "collapse",
+        "zh": "倒塌"
+      },
+      {
+        "en": "committed",
+        "zh": "坚定的"
+      },
+      {
+        "en": "compensate",
+        "zh": "补偿"
+      },
+      {
+        "en": "compile",
+        "zh": "编纂"
+      },
+      {
+        "en": "complement",
+        "zh": "补充"
+      },
+      {
+        "en": "complex",
+        "zh": "复杂的"
+      },
+      {
+        "en": "comply",
+        "zh": "遵守"
+      },
+      {
+        "en": "comprehensive",
+        "zh": "全面的"
+      },
+      {
+        "en": "comprise",
+        "zh": "包含"
+      },
+      {
+        "en": "concede",
+        "zh": "承认"
+      },
+      {
+        "en": "conceive",
+        "zh": "构想"
+      },
+      {
+        "en": "conform",
+        "zh": "符合"
+      },
+      {
+        "en": "consensus",
+        "zh": "共识"
+      },
+      {
+        "en": "constitute",
+        "zh": "构成"
+      },
+      {
+        "en": "contemporary",
+        "zh": "当代的"
+      },
+      {
+        "en": "contradict",
+        "zh": "矛盾"
+      },
+      {
+        "en": "contribute",
+        "zh": "贡献"
+      },
+      {
+        "en": "controversial",
+        "zh": "有争议的"
+      },
+      {
+        "en": "crucial",
+        "zh": "关键的"
+      },
+      {
+        "en": "cumulative",
+        "zh": "累积的"
+      },
+      {
+        "en": "decisive",
+        "zh": "决定性的"
+      },
+      {
+        "en": "deduce",
+        "zh": "推断"
+      },
+      {
+        "en": "deficient",
+        "zh": "不足的"
+      },
+      {
+        "en": "deliberate",
+        "zh": "故意的"
+      },
+      {
+        "en": "demonstrate",
+        "zh": "证明"
+      },
+      {
+        "en": "denote",
+        "zh": "表示"
+      },
+      {
+        "en": "derive",
+        "zh": "源自"
+      },
+      {
+        "en": "detect",
+        "zh": "探测"
+      },
+      {
+        "en": "deviate",
+        "zh": "偏离"
+      },
+      {
+        "en": "discrete",
+        "zh": "离散的"
+      },
+      {
+        "en": "dismantle",
+        "zh": "拆除"
+      },
+      {
+        "en": "dispatch",
+        "zh": "派遣"
+      },
+      {
+        "en": "distort",
+        "zh": "扭曲"
+      },
+      {
+        "en": "diverse",
+        "zh": "多样的"
+      },
+      {
+        "en": "domain",
+        "zh": "领域"
+      },
+      {
+        "en": "domestic",
+        "zh": "国内的"
+      },
+      {
+        "en": "dominant",
+        "zh": "主导的"
+      },
+      {
+        "en": "draft",
+        "zh": "草案"
+      },
+      {
+        "en": "dramatic",
+        "zh": "戏剧性的"
+      },
+      {
+        "en": "dynamic",
+        "zh": "动态的"
+      },
+      {
+        "en": "elaborate",
+        "zh": "详尽的"
+      },
+      {
+        "en": "eliminate",
+        "zh": "消除"
+      },
+      {
+        "en": "empirical",
+        "zh": "经验主义的"
+      },
+      {
+        "en": "encounter",
+        "zh": "遭遇"
+      },
+      {
+        "en": "enhance",
+        "zh": "增强"
+      },
+      {
+        "en": "episode",
+        "zh": "事件"
+      },
+      {
+        "en": "equilibrium",
+        "zh": "平衡"
+      },
+      {
+        "en": "evident",
+        "zh": "明显的"
+      },
+      {
+        "en": "evolve",
+        "zh": "进化"
+      },
+      {
+        "en": "exclude",
+        "zh": "排除"
+      },
+      {
+        "en": "exclusive",
+        "zh": "独有的"
+      },
+      {
+        "en": "exemplify",
+        "zh": "举例说明"
+      },
+      {
+        "en": "exploit",
+        "zh": "利用；剥削"
+      },
+      {
+        "en": "expose",
+        "zh": "暴露"
+      },
+      {
+        "en": "external",
+        "zh": "外部的"
+      },
+      {
+        "en": "facilitate",
+        "zh": "促进"
+      },
+      {
+        "en": "feasible",
+        "zh": "可行的"
+      },
+      {
+        "en": "flexible",
+        "zh": "灵活的"
+      },
+      {
+        "en": "fluctuate",
+        "zh": "波动"
+      },
+      {
+        "en": "format",
+        "zh": "格式"
+      },
+      {
+        "en": "formula",
+        "zh": "公式"
+      },
+      {
+        "en": "foundation",
+        "zh": "基础"
+      },
+      {
+        "en": "framework",
+        "zh": "框架"
+      },
+      {
+        "en": "fundamental",
+        "zh": "基本的"
+      },
+      {
+        "en": "generate",
+        "zh": "产生"
+      },
+      {
+        "en": "global",
+        "zh": "全球的"
+      },
+      {
+        "en": "harness",
+        "zh": "利用"
+      },
+      {
+        "en": "highlight",
+        "zh": "强调"
+      },
+      {
+        "en": "identical",
+        "zh": "相同的"
+      },
+      {
+        "en": "identify",
+        "zh": "识别"
+      },
+      {
+        "en": "incentive",
+        "zh": "激励"
+      },
+      {
+        "en": "incidence",
+        "zh": "发生率"
+      },
+      {
+        "en": "incline",
+        "zh": "倾向于"
+      },
+      {
+        "en": "integral",
+        "zh": "完整的"
+      },
+      {
+        "en": "interaction",
+        "zh": "互动"
+      },
+      {
+        "en": "intervene",
+        "zh": "干预"
+      },
+      {
+        "en": "investigate",
+        "zh": "调查"
+      },
+      {
+        "en": "isolate",
+        "zh": "隔离"
+      },
+      {
+        "en": "legislation",
+        "zh": "立法"
+      },
+      {
+        "en": "legitimate",
+        "zh": "合法的"
+      },
+      {
+        "en": "levy",
+        "zh": "征税"
+      },
+      {
+        "en": "locate",
+        "zh": "定位"
+      },
+      {
+        "en": "manipulate",
+        "zh": "操纵"
+      },
+      {
+        "en": "maximize",
+        "zh": "最大化"
+      },
+      {
+        "en": "minority",
+        "zh": "少数"
+      },
+      {
+        "en": "motive",
+        "zh": "动机"
+      },
+      {
+        "en": "negligible",
+        "zh": "可忽略的"
+      },
+      {
+        "en": "notion",
+        "zh": "概念"
+      },
+      {
+        "en": "objective",
+        "zh": "客观的"
+      },
+      {
+        "en": "offset",
+        "zh": "抵消"
+      },
+      {
+        "en": "ongoing",
+        "zh": "持续的"
+      },
+      {
+        "en": "paradox",
+        "zh": "悖论"
+      },
+      {
+        "en": "participate",
+        "zh": "参与"
+      },
+      {
+        "en": "passive",
+        "zh": "被动的"
+      },
+      {
+        "en": "phenomenon",
+        "zh": "现象"
+      },
+      {
+        "en": "precede",
+        "zh": "先于"
+      },
+      {
+        "en": "precise",
+        "zh": "精确的"
+      },
+      {
+        "en": "predict",
+        "zh": "预测"
+      },
+      {
+        "en": "preliminary",
+        "zh": "初步的"
+      },
+      {
+        "en": "presume",
+        "zh": "假定"
+      },
+      {
+        "en": "priority",
+        "zh": "优先"
+      },
+      {
+        "en": "prohibit",
+        "zh": "禁止"
+      },
+      {
+        "en": "promote",
+        "zh": "促进"
+      },
+      {
+        "en": "radical",
+        "zh": "激进的"
+      },
+      {
+        "en": "random",
+        "zh": "随机的"
+      },
+      {
+        "en": "rational",
+        "zh": "理性的"
+      },
+      {
+        "en": "recover",
+        "zh": "恢复"
+      },
+      {
+        "en": "relevant",
+        "zh": "相关的"
+      },
+      {
+        "en": "reluctant",
+        "zh": "不情愿的"
+      },
+      {
+        "en": "restore",
+        "zh": "恢复"
+      },
+      {
+        "en": "restrict",
+        "zh": "限制"
+      },
+      {
+        "en": "retain",
+        "zh": "保留"
+      },
+      {
+        "en": "reveal",
+        "zh": "揭示"
+      },
+      {
+        "en": "revenue",
+        "zh": "收入"
+      },
+      {
+        "en": "reverse",
+        "zh": "相反的"
+      },
+      {
+        "en": "rigid",
+        "zh": "僵硬的"
+      },
+      {
+        "en": "robust",
+        "zh": "强健的"
+      },
+      {
+        "en": "roughly",
+        "zh": "大致"
+      },
+      {
+        "en": "simulate",
+        "zh": "模拟"
+      },
+      {
+        "en": "solely",
+        "zh": "仅仅"
+      },
+      {
+        "en": "stable",
+        "zh": "稳定的"
+      },
+      {
+        "en": "statistic",
+        "zh": "统计"
+      },
+      {
+        "en": "status",
+        "zh": "地位"
+      },
+      {
+        "en": "straightforward",
+        "zh": "简单的"
+      },
+      {
+        "en": "subsequent",
+        "zh": "随后的"
+      },
+      {
+        "en": "substitute",
+        "zh": "替代"
+      },
+      {
+        "en": "successive",
+        "zh": "连续的"
+      },
+      {
+        "en": "sufficient",
+        "zh": "充足的"
+      },
+      {
+        "en": "survive",
+        "zh": "幸存"
+      },
+      {
+        "en": "susceptible",
+        "zh": "易受影响的"
+      },
+      {
+        "en": "sustain",
+        "zh": "维持"
+      },
+      {
+        "en": "tangible",
+        "zh": "有形的"
+      },
+      {
+        "en": "temporary",
+        "zh": "暂时的"
+      },
+      {
+        "en": "tendency",
+        "zh": "趋势"
+      },
+      {
+        "en": "threshold",
+        "zh": "阈值"
+      },
+      {
+        "en": "ultimate",
+        "zh": "最终的"
+      },
+      {
+        "en": "undergo",
+        "zh": "经历"
+      },
+      {
+        "en": "undertake",
+        "zh": "承担"
+      },
+      {
+        "en": "unique",
+        "zh": "独特的"
+      },
+      {
+        "en": "universal",
+        "zh": "普遍的"
+      },
+      {
+        "en": "utilize",
+        "zh": "利用"
+      },
+      {
+        "en": "valid",
+        "zh": "有效的"
+      },
+      {
+        "en": "vanish",
+        "zh": "消失"
+      },
+      {
+        "en": "variation",
+        "zh": "变化"
+      },
+      {
+        "en": "versatile",
+        "zh": "多才多艺的"
+      },
+      {
+        "en": "viable",
+        "zh": "可行的"
+      },
+      {
+        "en": "virtual",
+        "zh": "虚拟的"
+      },
+      {
+        "en": "visible",
+        "zh": "可见的"
+      },
+      {
+        "en": "volume",
+        "zh": "体积；量"
+      },
+      {
+        "en": "voluntary",
+        "zh": "自愿的"
+      },
+      {
+        "en": "widespread",
+        "zh": "广泛的"
+      }
+    ],
+    "note": ""
+  },
+  {
+    "id": "kaoyan",
+    "name": "考研·红宝书（请导入你的正版词表）",
+    "words": [],
+    "note": "请在「词库后台」把你的红宝书乱序2026词表粘贴进来；本程序不直接内置原书内容，请粘贴你手上的正版。"
+  }
+]
