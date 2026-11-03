@@ -1,0 +1,15 @@
+# Render 部署配置（一键部署用）
+# 在 render.com 选择 "New" -> "Blueprint" -> 连接 GitHub 仓库后自动读取本文件
+services:
+  - type: web
+    name: word-pk
+    runtime: node
+    plan: free
+    region: oregon          # 海外节点，免备案；可选 singapore 更靠近国内
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    # 端口由应用内 process.env.PORT 读取，无需额外声明
+    # WebSocket：Render 的 web 服务原生支持 HTTP upgrade，无需特殊开关
+    envVars: []
