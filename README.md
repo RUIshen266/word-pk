@@ -38,8 +38,7 @@ word-pk/
 │   ├── index.html            # 对战主页
 │   ├── client.js             # 前端逻辑（出题/作答/揭晓/PDF导出/震动/音频引擎）
 │   ├── style.css             # 样式（含选项上下居中、点击动画）
-│   ├── admin.html            # 词库后台管理页
-│   └── 8a1c16289833f847666a5204fa688e33.txt  # 微信域名验证文件（勿删/勿改名）
+│   └── admin.html            # 词库后台管理页
 ├── cloud.config.json         # 云端持久化配置（Supabase）
 ├── create_cloud_tables.sql   # Supabase 建表 SQL
 ├── render.yaml               # Render Blueprint 部署配置
@@ -127,16 +126,6 @@ ability,能力
 ```
 
 保存后即时生效，对战创建页即可选用。
-
----
-
-## 🔑 微信域名验证文件
-
-`public/8a1c16289833f847666a5204fa688e33.txt` 是微信公众平台/JS-SDK 要求的**域名所有权验证文件**：
-
-- **不要删除、不要改名、不要修改内容**，否则微信重新校验时会失败。
-- 它会被自动作为静态文件在网站根目录提供：`https://你的域名/8a1c16289833f847666a5204fa688e33.txt`。
-- `server.js` 已为该后缀配置 `text/plain` MIME。
 
 ---
 
