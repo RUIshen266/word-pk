@@ -930,27 +930,29 @@ widespread,广泛的`;
 
     // ===== 背景音乐开关 =====
     const btnMusic = $('#btnMusic');
+    const wantMusic = localStorage.getItem('wordpk_music');
+    const prefOn = (wantMusic === null) ? true : (wantMusic === 'on'); // 默认开启
     function syncMusicBtn() {
       const on = Sound.isOn();
-      btnMusic.textContent = on ? '🔊 音乐' : '🔇 音乐';
+      // 开启但未真正播放时显示「🔈 音乐」提示用户点一下页面即可开始
+      btnMusic.textContent = on ? '🔊 音乐' : (prefOn ? '🔈 音乐' : '🔇 音乐');
       btnMusic.classList.toggle('on', on);
     }
     btnMusic.addEventListener('click', (e) => {
       e.stopPropagation();
-      Sound.toggle();
+      if (!Sound.isOn()) { Sound.ensure(); Sound.startBGM(); }
+      else Sound.stopBGM();
       localStorage.setItem('wordpk_music', Sound.isOn() ? 'on' : 'off');
       syncMusicBtn();
     });
-    // 记忆偏好（默认开启）；受浏览器自动播放限制，需在首次交互后才会真正播放
-    const wantMusic = localStorage.getItem('wordpk_music');
-    const prefOn = (wantMusic === null) ? true : (wantMusic === 'on');
+    // 受浏览器自动播放限制，必须在用户首次手势后才会真正播放；用多种事件兜底（移动端 touchstart 更可靠）
+    function tryStartBGM(e) {
+      if (e && e.target && e.target.closest && e.target.closest('#btnMusic')) return; // 交给按钮自身处理
+      Sound.ensure(); Sound.startBGM(); syncMusicBtn();
+      ['pointerdown', 'touchstart', 'click'].forEach((ev) => document.removeEventListener(ev, tryStartBGM));
+    }
     if (prefOn) {
-      const resume = (e) => {
-        if (e && e.target && e.target.closest && e.target.closest('#btnMusic')) return; // 交给按钮自身处理
-        Sound.startBGM(); syncMusicBtn();
-        document.removeEventListener('pointerdown', resume);
-      };
-      document.addEventListener('pointerdown', resume);
+      ['pointerdown', 'touchstart', 'click'].forEach((ev) => document.addEventListener(ev, tryStartBGM));
     }
     syncMusicBtn();
   }
