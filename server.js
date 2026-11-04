@@ -113,7 +113,8 @@ const MIME = {
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2'
+  '.woff2': 'font/woff2',
+  '.txt': 'text/plain; charset=utf-8'
 };
 
 const server = http.createServer(async (req, res) => {
@@ -273,10 +274,14 @@ function makeQuestion(words, targetIndex) {
     if (distract.length >= need) break;
     if (seen.has(w.zh)) continue;
     seen.add(w.zh);
-    distract.push(w.zh);
+    distract.push(w);
   }
-  const options = shuffle([target.zh, ...distract]);
-  return { en: target.en, options, correctIndex: options.indexOf(target.zh) };
+  const opts = shuffle([target, ...distract]);
+  return {
+    en: target.en,
+    options: opts.map((w) => ({ zh: w.zh, en: w.en })),
+    correctIndex: opts.findIndex((w) => w.zh === target.zh)
+  };
 }
 
 // ===================== 排行榜（服务端持久化） =====================
@@ -751,14 +756,15 @@ function reveal(room) {
   room.scores.host += sc.gainH;
   room.scores.guest += sc.gainG;
   // 收集错题 + 统计
-  if (!cH) room.wrong.host.push({ en: q.en, zh: q.options[correct] });
-  if (!cG) room.wrong.guest.push({ en: q.en, zh: q.options[correct] });
+  if (!cH) room.wrong.host.push({ en: q.en, zh: q.options[correct].zh });
+  if (!cG) room.wrong.guest.push({ en: q.en, zh: q.options[correct].zh });
   if (cH) { room.stats.host.correct++; if (typeof tH === 'number') room.stats.host.time += tH; }
   if (cG) { room.stats.guest.correct++; if (typeof tG === 'number') room.stats.guest.time += tG; }
   const base = {
     type: 'result',
     correctIndex: correct,
-    correctZh: q.options[correct],
+    correctZh: q.options[correct].zh,
+    options: q.options,
     en: q.en,
     scores: room.scores,
     detail: {
