@@ -476,7 +476,7 @@ widespread,广泛的`;
     m.options.forEach((opt, i) => {
       const b = document.createElement('button');
       b.className = 'opt';
-      b.innerHTML = `<span class="opt-key">${i + 1}</span><span>${escapeHtml(opt)}</span>`;
+      b.innerHTML = `<span class="opt-key">${i + 1}</span><span class="opt-zh">${escapeHtml(opt.zh)}</span>`;
       b.addEventListener('click', () => choose(i));
       box.appendChild(b);
     });
@@ -493,8 +493,13 @@ widespread,广泛的`;
     send({ type: 'answer', choice: i });
     $$('#options .opt').forEach((b, idx) => {
       b.classList.add('disabled');
-      if (idx === i) b.classList.add('mine');
+      if (idx === i) {
+        b.classList.add('mine', 'tapped');
+      }
     });
+    // 反馈：手机震动 + 轻微音效（不支持的环境自动忽略）
+    if (navigator.vibrate) { try { navigator.vibrate(28); } catch (_) {} }
+    playTap();
     $('#oppStatus').textContent = '已提交，等待对手…';
   }
 
@@ -504,9 +509,12 @@ widespread,广泛的`;
     const opts = $$('#options .opt');
     const correct = m.correctIndex;
     opts.forEach((b, idx) => {
-      b.classList.add('disabled');
+      b.classList.add('disabled', 'reveal');
+      const o = m.options[idx] || {};
+      b.innerHTML = `<span class="opt-key">${idx + 1}</span><span class="opt-zh">${escapeHtml(o.zh)}</span><span class="opt-en">${escapeHtml(o.en)}</span>`;
       if (idx === correct) b.classList.add('correct');
       if (idx === m.yourChoice && idx !== correct) b.classList.add('wrong');
+      if (idx === m.yourChoice) b.classList.add('mine');
     });
     const mine = m.yourChoice;
     const fb = $('#feedback');
@@ -594,7 +602,7 @@ widespread,广泛的`;
       $('#wrongTip').textContent = '这一局全对，太强了！';
       return;
     }
-    $('#wrongTip').textContent = '点击下方按钮导出为 Word（对称对齐表格）';
+    $('#wrongTip').textContent = '点击下方按钮导出为 PDF（英文 | 中文 双列表格）';
     words.forEach((w) => {
       const row = document.createElement('div');
       row.className = 'wrong-item';
@@ -603,17 +611,7 @@ widespread,广泛的`;
     });
   }
 
-  // ===================== 导出 Word =====================
-  function loadDocx() {
-    return new Promise((res, rej) => {
-      if (window.docx) return res();
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/docx/build/index.umd.js';
-      s.onload = res;
-      s.onerror = () => rej(new Error('docx 加载失败'));
-      document.head.appendChild(s);
-    });
-  }
+  // ===================== 导出 PDF =====================
   function downloadBlob(blob, filename) {
     const a = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -621,58 +619,129 @@ widespread,广泛的`;
     document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1200);
   }
-  async function exportWrongToWord() {
+  // 加载 jsPDF + html2canvas（如需中文完美显示，用截图方式生成）
+  function loadPdfLibs() {
+    return new Promise((res, rej) => {
+      if (window.jspdf && window.html2canvas) return res();
+      let pending = 0;
+      const done = () => { if (pending === 0) res(); };
+      const fail = () => rej(new Error('PDF 库加载失败'));
+      function inject(src) {
+        pending++;
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = () => { pending--; done(); };
+        s.onerror = fail;
+        document.head.appendChild(s);
+      }
+      if (!window.jspdf) inject('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+      else done();
+      if (!window.html2canvas) inject('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+      else done();
+    });
+  }
+  async function exportWrongToPdf() {
     const words = game.wrong || [];
     if (!words.length) { toast('这一局全对，没有错题可导出~'); return; }
     const name = me.name || '我';
+    toast('正在生成 PDF…');
     try {
-      await loadDocx();
-      const blob = await buildDocx(words, name);
-      downloadBlob(blob, `单词PK错题本_${name}.docx`);
-      toast('已导出 Word（.docx）');
+      await loadPdfLibs();
+      const canvas = await renderWrongCanvas(words, name);
+      const pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+      addCanvasPaged(pdf, canvas, 36);
+      pdf.save(`单词PK错题本_${name}.pdf`);
+      toast('已导出 PDF');
     } catch (e) {
-      console.warn('docx 导出失败，回退 HTML：', e);
-      exportWrongHtml(words, name);
+      console.warn('PDF 生成失败，回退打印页：', e);
+      openPrintFriendly(words, name);
     }
   }
-  function buildDocx(words, name) {
-    const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, Packer } = window.docx;
-    const border = { style: BorderStyle.SINGLE, size: 4, color: 'BBBBBB' };
-    const cb = { top: border, bottom: border, left: border, right: border };
-    const mkCell = (text, bold) => new TableCell({
-      borders: cb,
-      width: { size: 50, type: WidthType.PERCENTAGE },
-      margins: { top: 60, bottom: 60, left: 100, right: 100 },
-      children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: String(text), bold: !!bold, size: 22 })] })]
+  // 把双列表格（英文|中文）渲染到离屏容器，再用 html2canvas 截图
+  function renderWrongCanvas(words, name) {
+    return new Promise((resolve, reject) => {
+      const stage = document.createElement('div');
+      stage.className = 'export-stage';
+      const rows = words.map((w, i) => `
+        <div class="ex-row">
+          <div class="ex-no">${i + 1}</div>
+          <div class="ex-en">${escapeHtml(w.en)}</div>
+          <div class="ex-zh">${escapeHtml(w.zh)}</div>
+        </div>`).join('');
+      stage.innerHTML = `
+        <div class="ex-title">单词PK · 我的错题本</div>
+        <div class="ex-sub">玩家：${escapeHtml(name)}　日期：${new Date().toLocaleDateString('zh-CN')}　共 ${words.length} 词</div>
+        <div class="ex-table">
+          <div class="ex-row ex-head">
+            <div class="ex-no">#</div>
+            <div class="ex-en">英文</div>
+            <div class="ex-zh">中文</div>
+          </div>
+          ${rows}
+        </div>`;
+      document.body.appendChild(stage);
+      window.html2canvas(stage, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true })
+        .then((canvas) => { resolve(canvas); stage.remove(); })
+        .catch((err) => { stage.remove(); reject(err); });
     });
-    const header = new TableRow({ children: [mkCell('英文', true), mkCell('中文', true)] });
-    const rows = words.map((w) => new TableRow({ children: [mkCell(w.en), mkCell(w.zh)] }));
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [new TextRun({ text: '单词PK · 我的错题本', bold: true, size: 36 })] }),
-          new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: `玩家：${name}    日期：${new Date().toLocaleDateString('zh-CN')}`, size: 22, color: '666666' })] }),
-          new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, ...rows] })
-        ]
-      }]
-    });
-    return Packer.toBlob(doc);
   }
-  function exportWrongHtml(words, name) {
-    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    const rows = words.map((w) => `<tr><td>${esc(w.en)}</td><td>${esc(w.zh)}</td></tr>`).join('');
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>单词PK错题本</title></head>
-<body style="font-family:'Microsoft YaHei',sans-serif">
-<h2 style="text-align:center">单词PK · 我的错题本</h2>
-<p style="text-align:center;color:#666">玩家：${esc(name)}　日期：${new Date().toLocaleDateString('zh-CN')}</p>
-<table border="1" cellspacing="0" cellpadding="8" style="width:80%;margin:16px auto;border-collapse:collapse;font-size:14px">
-<thead><tr style="background:#f2f4fb"><th style="text-align:center;width:50%;padding:8px">英文</th><th style="text-align:center;width:50%;padding:8px">中文</th></tr></thead>
-<tbody>${rows}</tbody></table>
+  // 把整张截图按 A4 宽度适配并分页
+  function addCanvasPaged(pdf, canvas, margin) {
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW = pageW - margin * 2;
+    const pxPageH = canvas.width * (pageH - margin * 2) / imgW;
+    let rendered = 0, first = true;
+    while (rendered < canvas.height) {
+      const sliceH = Math.min(pxPageH, canvas.height - rendered);
+      const tmp = document.createElement('canvas');
+      tmp.width = canvas.width; tmp.height = Math.ceil(sliceH);
+      const ctx = tmp.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, tmp.width, tmp.height);
+      ctx.drawImage(canvas, 0, rendered, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+      const img = tmp.toDataURL('image/jpeg', 0.92);
+      if (!first) pdf.addPage();
+      const h = imgW * sliceH / canvas.width;
+      pdf.addImage(img, 'JPEG', margin, margin, imgW, h);
+      rendered += sliceH; first = false;
+    }
+  }
+  // 回退：CDN 不可用时打开一个打印友好页，用户可 Ctrl+P 另存为 PDF
+  function openPrintFriendly(words, name) {
+    const rows = words.map((w) => `<tr><td>${escapeHtml(w.en)}</td><td>${escapeHtml(w.zh)}</td></tr>`).join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>单词PK错题本</title>
+<style>
+  body{font-family:'Microsoft YaHei',sans-serif;padding:24px;color:#111}
+  h2{text-align:center;margin:0 0 6px} .sub{text-align:center;color:#666;margin-bottom:16px}
+  table{width:80%;margin:0 auto;border-collapse:collapse;font-size:15px}
+  th,td{border:1px solid #ccc;padding:9px 12px;text-align:center}
+  th{background:#f2f4fb}
+</style></head><body>
+<h2>单词PK · 我的错题本</h2>
+<div class="sub">玩家：${escapeHtml(name)}　日期：${new Date().toLocaleDateString('zh-CN')}</div>
+<table><thead><tr><th>英文</th><th>中文</th></tr></thead><tbody>${rows}</tbody></table>
+<script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script>
 </body></html>`;
-    const blob = new Blob(['﻿' + html], { type: 'application/msword' });
-    downloadBlob(blob, `单词PK错题本_${name}.doc`);
-    toast('已导出 Word（.doc）');
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); toast('已打开打印页，可另存为 PDF'); }
+    else toast('导出失败：浏览器拦截了弹窗，请允许弹窗');
+  }
+  // 轻微点击音效（Web Audio，无需外部文件）；不支持的环境自动忽略
+  let _audioCtx = null;
+  function playTap() {
+    try {
+      _audioCtx = _audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (_audioCtx.state === 'suspended') _audioCtx.resume();
+      const o = _audioCtx.createOscillator();
+      const g = _audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.value = 330;
+      g.gain.setValueAtTime(0.0001, _audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.16, _audioCtx.currentTime + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, _audioCtx.currentTime + 0.12);
+      o.connect(g); g.connect(_audioCtx.destination);
+      o.start(); o.stop(_audioCtx.currentTime + 0.13);
+    } catch (_) {}
   }
 
   // ===================== 排行榜 =====================
@@ -770,7 +839,7 @@ widespread,广泛的`;
     $('#btnStart').addEventListener('click', () => send({ type: 'start' }));
     $('#btnOverHome').addEventListener('click', () => { send({ type: 'leave' }); show('screen-home'); });
     $('#btnAgain').addEventListener('click', () => send({ type: 'start' }));
-    $('#btnExportWord').addEventListener('click', exportWrongToWord);
+    $('#btnExportWord').addEventListener('click', exportWrongToPdf);
 
     // 键盘 1-4 选答案
     document.addEventListener('keydown', (e) => {
