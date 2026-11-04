@@ -61,6 +61,8 @@ body{
 .big-btn:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.25)}
 .big-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#06122e;border:none;box-shadow:0 8px 24px rgba(108,140,255,.35)}
 .big-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+/* 表单提交按钮与上方输入框/设置块拉开间距（原本紧贴，视觉不协调） */
+#btnJoin,#btnCreate{margin-top:26px}
 
 /* 通用面板 */
 .panel{width:100%;max-width:460px;background:var(--panel-solid);border:1px solid var(--border);
