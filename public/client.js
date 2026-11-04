@@ -499,7 +499,7 @@ widespread,广泛的`;
     });
     // 反馈：手机震动 + 轻微音效（不支持的环境自动忽略）
     if (navigator.vibrate) { try { navigator.vibrate(28); } catch (_) {} }
-    playTap();
+    Sound.playTap();
     $('#oppStatus').textContent = '已提交，等待对手…';
   }
 
@@ -529,6 +529,7 @@ widespread,广泛的`;
       fb.className = 'feedback bad';
     }
     updateScores(m.scores.host, m.scores.guest);
+    if (mine === correct) Sound.playCorrect(); else Sound.playWrong();
     const oppRole = me.role === 'host' ? 'guest' : 'host';
     const opp = m.detail[oppRole];
     const oppName = me.role === 'host' ? $('#sbGuestName').textContent : $('#sbHostName').textContent;
@@ -726,23 +727,100 @@ widespread,广泛的`;
     if (w) { w.document.write(html); w.document.close(); toast('已打开打印页，可另存为 PDF'); }
     else toast('导出失败：浏览器拦截了弹窗，请允许弹窗');
   }
-  // 轻微点击音效（Web Audio，无需外部文件）；不支持的环境自动忽略
-  let _audioCtx = null;
-  function playTap() {
-    try {
-      _audioCtx = _audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (_audioCtx.state === 'suspended') _audioCtx.resume();
-      const o = _audioCtx.createOscillator();
-      const g = _audioCtx.createGain();
-      o.type = 'triangle';
-      o.frequency.value = 330;
-      g.gain.setValueAtTime(0.0001, _audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.16, _audioCtx.currentTime + 0.005);
-      g.gain.exponentialRampToValueAtTime(0.0001, _audioCtx.currentTime + 0.12);
-      o.connect(g); g.connect(_audioCtx.destination);
-      o.start(); o.stop(_audioCtx.currentTime + 0.13);
-    } catch (_) {}
-  }
+  // ===================== 音频引擎（Web Audio 程序化，无外部文件） =====================
+  // 包含：轻快循环背景音乐 + 点击音 + 答对/答错反馈音；不支持的环境自动忽略。
+  const Sound = (function () {
+    let ctx = null, master = null, musicGain = null, sfxGain = null;
+    let bgmOn = false, bgmTimer = null, step = 0, nextTime = 0;
+    const TEMPO = 120;                       // BPM
+    const STEP = 60 / TEMPO / 2;             // 八分音符时长(秒)
+    // 16 步主旋律（C 大调轻快，0 = 休止）
+    const MEL  = [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880.00, 698.46,
+                  523.25, 659.25, 783.99, 1046.5, 880.00, 783.99, 659.25, 0];
+    // 低音（每 4 步一个根音：C D E D）
+    const BASS = [130.81, 0, 0, 0, 146.83, 0, 0, 0, 164.81, 0, 0, 0, 146.83, 0, 130.81, 0];
+
+    function ensure() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+        master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+        musicGain = ctx.createGain(); musicGain.gain.value = 0.5; musicGain.connect(master);
+        sfxGain = ctx.createGain(); sfxGain.gain.value = 1.0; sfxGain.connect(master);
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    function tone(freq, start, dur, type, vol, dest) {
+      if (!ctx || !freq) return;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, start);
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(vol, start + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      o.connect(g); g.connect(dest || sfxGain);
+      o.start(start); o.stop(start + dur + 0.03);
+    }
+    function noiseHit(start, dur, vol) {
+      if (!ctx) return;
+      const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
+      const g = ctx.createGain(); g.gain.value = vol;
+      src.connect(hp); hp.connect(g); g.connect(musicGain);
+      src.start(start);
+    }
+    function schedule() {
+      if (!bgmOn || !ctx) return;
+      while (nextTime < ctx.currentTime + 0.15) {
+        const i = step % MEL.length;
+        const t = nextTime;
+        tone(MEL[i], t, STEP * 0.92, 'triangle', 0.18, musicGain);          // 主旋律
+        if (BASS[i]) tone(BASS[i], t, STEP * 1.8, 'sawtooth', 0.12, musicGain); // 低音
+        if (i % 2 === 0) noiseHit(t, 0.04, 0.06);                          // 轻 hi-hat
+        if (i % 4 === 0) tone(98, t, 0.10, 'square', 0.10, musicGain);      // kick 低频
+        step++; nextTime += STEP;
+      }
+      bgmTimer = setTimeout(schedule, 25);
+    }
+    function startBGM() {
+      if (!ensure()) return;
+      if (bgmOn) return;
+      bgmOn = true; step = 0; nextTime = ctx.currentTime + 0.08;
+      schedule();
+    }
+    function stopBGM() {
+      bgmOn = false;
+      if (bgmTimer) { clearTimeout(bgmTimer); bgmTimer = null; }
+    }
+    function toggle() { if (bgmOn) stopBGM(); else startBGM(); return bgmOn; }
+    function isOn() { return bgmOn; }
+    // 点击轻响
+    function playTap() {
+      if (!ensure()) return;
+      tone(330, ctx.currentTime, 0.12, 'triangle', 0.16, sfxGain);
+    }
+    // 答对：明亮上行琶音 (C5 E5 G5 C6)
+    function playCorrect() {
+      if (!ensure()) return;
+      const t = ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, k) =>
+        tone(f, t + k * 0.075, 0.20, 'triangle', 0.26, sfxGain));
+    }
+    // 答错：低沉下行 + 闷响 (G4 → Eb4，叠加 C3 低音)
+    function playWrong() {
+      if (!ensure()) return;
+      const t = ctx.currentTime;
+      tone(392.00, t, 0.20, 'sawtooth', 0.20, sfxGain);       // G4
+      tone(311.13, t + 0.13, 0.34, 'sawtooth', 0.20, sfxGain); // Eb4
+      tone(130.81, t + 0.05, 0.40, 'square', 0.12, sfxGain);   // C3 低沉根音
+    }
+    return { ensure, startBGM, stopBGM, toggle, isOn, playTap, playCorrect, playWrong };
+  })();
 
   // ===================== 排行榜 =====================
   function openLeaderboard() {
@@ -849,6 +927,32 @@ widespread,广泛的`;
         if (game.cur && i < game.cur.options.length) choose(i);
       }
     });
+
+    // ===== 背景音乐开关 =====
+    const btnMusic = $('#btnMusic');
+    function syncMusicBtn() {
+      const on = Sound.isOn();
+      btnMusic.textContent = on ? '🔊 音乐' : '🔇 音乐';
+      btnMusic.classList.toggle('on', on);
+    }
+    btnMusic.addEventListener('click', (e) => {
+      e.stopPropagation();
+      Sound.toggle();
+      localStorage.setItem('wordpk_music', Sound.isOn() ? 'on' : 'off');
+      syncMusicBtn();
+    });
+    // 记忆偏好（默认开启）；受浏览器自动播放限制，需在首次交互后才会真正播放
+    const wantMusic = localStorage.getItem('wordpk_music');
+    const prefOn = (wantMusic === null) ? true : (wantMusic === 'on');
+    if (prefOn) {
+      const resume = (e) => {
+        if (e && e.target && e.target.closest && e.target.closest('#btnMusic')) return; // 交给按钮自身处理
+        Sound.startBGM(); syncMusicBtn();
+        document.removeEventListener('pointerdown', resume);
+      };
+      document.addEventListener('pointerdown', resume);
+    }
+    syncMusicBtn();
   }
 
   // ===================== 启动 =====================
