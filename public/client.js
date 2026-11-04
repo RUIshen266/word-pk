@@ -777,6 +777,7 @@ widespread,广泛的`;
     }
     function schedule() {
       if (!bgmOn || !ctx) return;
+      if (ctx.state !== 'running') { bgmTimer = setTimeout(schedule, 60); return; } // ctx 挂起时不调度，避免基于冻结时钟的错误排程
       while (nextTime < ctx.currentTime + 0.15) {
         const i = step % MEL.length;
         const t = nextTime;
@@ -833,7 +834,17 @@ widespread,广泛的`;
     let wantBGM = true; // 用户是否希望播放 BGM（退出重进/键盘选择都能据此续播）
     function setDesired(b) { wantBGM = !!b; }
     function isDesired() { return wantBGM; }
-    function ensureMusicIfDesired() { if (wantBGM && !bgmOn) startBGM(); }
+    function resync() {
+      // BGM 已在播但播放头落后于真实时钟（ctx 曾被挂起后恢复），重新对齐避免一次性补播爆音
+      if (bgmOn && ctx && ctx.state === 'running' && nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.08;
+    }
+    function ensureMusicIfDesired() {
+      if (!wantBGM) { if (bgmOn) stopBGM(); return; }
+      ensure();
+      if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (_) {} }
+      if (wantBGM && !bgmOn) startBGM();
+      else resync();
+    }
     function resumeCtx() { ensure(); }
     return { ensure, resumeCtx, startBGM, stopBGM, toggle, isOn, isDesired, setDesired, ensureMusicIfDesired, playTap, playCorrect, playWrong };
   })();
@@ -963,15 +974,14 @@ widespread,广泛的`;
       localStorage.setItem('wordpk_music', Sound.isDesired() ? 'on' : 'off');
       syncMusicBtn();
     });
-    // 受浏览器自动播放限制，必须在用户首次手势后才会真正播放；用多种事件兜底（移动端 touchstart 更可靠）
-    function tryStartBGM(e) {
+    // 持续监听用户手势：每次交互都尝试解锁并续播 BGM（幂等）。
+    // 关键修复：之前是“首次手势后移除监听”，导致创建/加入房间的那次点击误把 bgmOn 设 true 但未真正出声，
+    // 进入对战后监听器已移除、再无人 startBGM，全程静音。改为持续监听后，对战内任意点击都能恢复播放。
+    function keepBGMAlive(e) {
       if (e && e.target && e.target.closest && e.target.closest('#btnMusic')) return; // 交给按钮自身处理
-      Sound.ensure(); Sound.resumeCtx(); Sound.ensureMusicIfDesired(); syncMusicBtn();
-      ['pointerdown', 'touchstart', 'click'].forEach((ev) => document.removeEventListener(ev, tryStartBGM));
+      Sound.resumeCtx(); Sound.ensureMusicIfDesired(); syncMusicBtn();
     }
-    if (prefOn) {
-      ['pointerdown', 'touchstart', 'click'].forEach((ev) => document.addEventListener(ev, tryStartBGM));
-    }
+    ['pointerdown', 'touchstart', 'click'].forEach((ev) => document.addEventListener(ev, keepBGMAlive));
     // 微信内置浏览器：必须在 WeixinJSBridgeReady 之后才能解锁音频
     function wxUnlock() {
       Sound.ensure(); Sound.resumeCtx();
