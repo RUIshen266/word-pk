@@ -500,6 +500,7 @@ widespread,广泛的`;
     // 反馈：手机震动 + 轻微音效（不支持的环境自动忽略）
     if (navigator.vibrate) { try { navigator.vibrate(28); } catch (_) {} }
     Sound.playTap();
+    Sound.ensureMusicIfDesired(); // 选词即恢复/续播背景音乐（覆盖键盘选择、退出重进等场景）
     $('#oppStatus').textContent = '已提交，等待对手…';
   }
 
@@ -799,27 +800,42 @@ widespread,广泛的`;
     }
     function toggle() { if (bgmOn) stopBGM(); else startBGM(); return bgmOn; }
     function isOn() { return bgmOn; }
+    // 播放前若 ctx 处于 suspended（首次/切后台回来/微信未解锁），先 resume 再发声，避免首声丢失
+    function withCtx(fn) {
+      if (!ensure()) return;
+      if (ctx.state === 'suspended') {
+        try {
+          ctx.resume().then(() => { if (ctx.state === 'running') fn(); });
+        } catch (_) { fn(); }
+      } else { fn(); }
+    }
     // 点击轻响
     function playTap() {
-      if (!ensure()) return;
-      tone(330, ctx.currentTime, 0.12, 'triangle', 0.16, sfxGain);
+      withCtx(() => tone(330, ctx.currentTime, 0.12, 'triangle', 0.16, sfxGain));
     }
     // 答对：明亮上行琶音 (C5 E5 G5 C6)
     function playCorrect() {
-      if (!ensure()) return;
-      const t = ctx.currentTime;
-      [523.25, 659.25, 783.99, 1046.5].forEach((f, k) =>
-        tone(f, t + k * 0.075, 0.20, 'triangle', 0.26, sfxGain));
+      withCtx(() => {
+        const t = ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, k) =>
+          tone(f, t + k * 0.075, 0.20, 'triangle', 0.26, sfxGain));
+      });
     }
     // 答错：低沉下行 + 闷响 (G4 → Eb4，叠加 C3 低音)
     function playWrong() {
-      if (!ensure()) return;
-      const t = ctx.currentTime;
-      tone(392.00, t, 0.20, 'sawtooth', 0.20, sfxGain);       // G4
-      tone(311.13, t + 0.13, 0.34, 'sawtooth', 0.20, sfxGain); // Eb4
-      tone(130.81, t + 0.05, 0.40, 'square', 0.12, sfxGain);   // C3 低沉根音
+      withCtx(() => {
+        const t = ctx.currentTime;
+        tone(392.00, t, 0.20, 'sawtooth', 0.20, sfxGain);       // G4
+        tone(311.13, t + 0.13, 0.34, 'sawtooth', 0.20, sfxGain); // Eb4
+        tone(130.81, t + 0.05, 0.40, 'square', 0.12, sfxGain);   // C3 低沉根音
+      });
     }
-    return { ensure, startBGM, stopBGM, toggle, isOn, playTap, playCorrect, playWrong };
+    let wantBGM = true; // 用户是否希望播放 BGM（退出重进/键盘选择都能据此续播）
+    function setDesired(b) { wantBGM = !!b; }
+    function isDesired() { return wantBGM; }
+    function ensureMusicIfDesired() { if (wantBGM && !bgmOn) startBGM(); }
+    function resumeCtx() { ensure(); }
+    return { ensure, resumeCtx, startBGM, stopBGM, toggle, isOn, isDesired, setDesired, ensureMusicIfDesired, playTap, playCorrect, playWrong };
   })();
 
   // ===================== 排行榜 =====================
@@ -932,6 +948,7 @@ widespread,广泛的`;
     const btnMusic = $('#btnMusic');
     const wantMusic = localStorage.getItem('wordpk_music');
     const prefOn = (wantMusic === null) ? true : (wantMusic === 'on'); // 默认开启
+    Sound.setDesired(prefOn);
     function syncMusicBtn() {
       const on = Sound.isOn();
       // 开启但未真正播放时显示「🔈 音乐」提示用户点一下页面即可开始
@@ -940,20 +957,41 @@ widespread,广泛的`;
     }
     btnMusic.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!Sound.isOn()) { Sound.ensure(); Sound.startBGM(); }
+      Sound.setDesired(!Sound.isOn());
+      if (Sound.isDesired()) { Sound.ensure(); Sound.resumeCtx(); Sound.startBGM(); }
       else Sound.stopBGM();
-      localStorage.setItem('wordpk_music', Sound.isOn() ? 'on' : 'off');
+      localStorage.setItem('wordpk_music', Sound.isDesired() ? 'on' : 'off');
       syncMusicBtn();
     });
     // 受浏览器自动播放限制，必须在用户首次手势后才会真正播放；用多种事件兜底（移动端 touchstart 更可靠）
     function tryStartBGM(e) {
       if (e && e.target && e.target.closest && e.target.closest('#btnMusic')) return; // 交给按钮自身处理
-      Sound.ensure(); Sound.startBGM(); syncMusicBtn();
+      Sound.ensure(); Sound.resumeCtx(); Sound.ensureMusicIfDesired(); syncMusicBtn();
       ['pointerdown', 'touchstart', 'click'].forEach((ev) => document.removeEventListener(ev, tryStartBGM));
     }
     if (prefOn) {
       ['pointerdown', 'touchstart', 'click'].forEach((ev) => document.addEventListener(ev, tryStartBGM));
     }
+    // 微信内置浏览器：必须在 WeixinJSBridgeReady 之后才能解锁音频
+    function wxUnlock() {
+      Sound.ensure(); Sound.resumeCtx();
+      try { if (window.WeixinJSBridge) window.WeixinJSBridge.invoke('getNetworkType', {}, () => {}); } catch (_) {}
+      if (Sound.isDesired() && !Sound.isOn()) Sound.ensureMusicIfDesired();
+      syncMusicBtn();
+    }
+    if (typeof window.WeixinJSBridge !== 'undefined') {
+      try { window.WeixinJSBridge.invoke('getNetworkType', {}, wxUnlock); } catch (_) { wxUnlock(); }
+    } else {
+      document.addEventListener('WeixinJSBridgeReady', wxUnlock, false);
+    }
+    // 切后台再回来：恢复音频上下文并续播 BGM（解决退出重进/切应用后没声音）
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        Sound.resumeCtx();
+        if (Sound.isDesired() && !Sound.isOn()) Sound.ensureMusicIfDesired();
+        syncMusicBtn();
+      }
+    });
     syncMusicBtn();
   }
 
