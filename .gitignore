@@ -7,6 +7,7 @@ node_modules/
 
 # 运行时生成的数据（部署后自动产生）
 leaderboard.json
+last_cleanup.json
 backups/
 
 # 日志

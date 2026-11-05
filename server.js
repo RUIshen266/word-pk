@@ -314,6 +314,41 @@ function updateLeaderboard(room, winner) {
   saveLeaderboard();
 }
 
+// ===================== 每月自动清理排行榜 =====================
+// 仅清理排行榜 leaderboard，保留词库 presets（用户资产，不可逆，绝不清理）。清理前自动备份。
+const CLEANUP_META = path.join(__dirname, 'last_cleanup.json');
+const CLEANUP_INTERVAL_MS = 30 * 24 * 60 * 60 * 1000; // 30 天 ≈ 每月
+async function loadLastCleanup() {
+  if (CLOUD_ENABLED) {
+    const v = await cloudGet('last_cleanup', null);
+    if (v && typeof v.ts === 'number') return v.ts;
+  }
+  try { const m = JSON.parse(fs.readFileSync(CLEANUP_META, 'utf8')); return m.ts || 0; } catch (_) { return 0; }
+}
+async function saveLastCleanup() {
+  const ts = Date.now();
+  if (CLOUD_ENABLED) { try { await cloudSet('last_cleanup', { ts }); } catch (_) {} }
+  try { atomicWrite(CLEANUP_META, JSON.stringify({ ts })); } catch (_) {}
+}
+async function monthlyCleanupLeaderboard() {
+  try {
+    if (process.env.DISABLE_MONTHLY_CLEANUP === '1') return; // 可通过环境变量关闭自动清理
+    const now = Date.now();
+    const last = await loadLastCleanup();
+    if (last === 0) { await saveLastCleanup(); return; } // 首次运行仅建立基准时间戳，不清理；之后每 30 天清理一次
+    if (now - last < CLEANUP_INTERVAL_MS) return; // 未到周期，跳过
+    if (leaderboard && typeof leaderboard === 'object' && Object.keys(leaderboard).length > 0) {
+      backupFile(LB_FILE); // 先备份当前排行榜数据，再清空
+    }
+    leaderboard = {};
+    saveLeaderboard(); // 写本地 + 云端（若开启）；词库 presets 完全不受影响
+    await saveLastCleanup();
+    console.log('[定时] 已执行每月排行榜清理（旧数据已备份至 backups/，词库保留）');
+  } catch (e) {
+    console.error('[定时] 每月排行榜清理失败:', e && e.message);
+  }
+}
+
 // ===================== 预设词库（服务端持久化，可在后台管理） =====================
 const PRESETS_FILE = path.join(__dirname, 'presets.json');
 
@@ -914,6 +949,9 @@ if (require.main === module) {
     console.log(`单词PK 服务器已启动: http://localhost:${PORT}`);
     console.log(`房间数: ${rooms.size}`);
   });
+  // 每月自动清理排行榜：启动延迟 10s（等云端排行榜加载完成）检查一次，之后每 24h 再检查；仅清 leaderboard，保留词库
+  setTimeout(monthlyCleanupLeaderboard, 10000);
+  setInterval(monthlyCleanupLeaderboard, 24 * 60 * 60 * 1000);
 }
 
 module.exports = { scoreRound, makeQuestion, shuffle };
