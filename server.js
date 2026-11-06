@@ -38,11 +38,22 @@ function sbHeaders(extra) {
   return h;
 }
 
+// 带超时的 fetch：Supabase 免费层偶发休眠时，请求可能长时间挂起，
+// 用 AbortController 在 timeoutMs 后主动中断，避免阻塞服务。
+async function cloudReq(url, opts, timeoutMs = 6000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, Object.assign({ signal: ctrl.signal }, opts));
+  } finally {
+    clearTimeout(timer);
+  }
+}
 // 云端 kv 表读写（kv(key text pk, value jsonb, updated_at)；anon 可读写）
 async function cloudGet(key, fallback) {
   try {
-    const r = await fetch(`${cloud.url}/rest/v1/kv?key=eq.${encodeURIComponent(key)}&select=value`, { headers: sbHeaders() });
-    if (!r.ok) return fallback;
+    const r = await cloudReq(`${cloud.url}/rest/v1/kv?key=eq.${encodeURIComponent(key)}&select=value`, { headers: sbHeaders() });
+    if (!r || !r.ok) return fallback;
     const rows = await r.json();
     if (!Array.isArray(rows) || !rows.length) return fallback;
     return rows[0].value;
@@ -50,12 +61,12 @@ async function cloudGet(key, fallback) {
 }
 async function cloudSet(key, value) {
   try {
-    const r = await fetch(`${cloud.url}/rest/v1/kv`, {
+    const r = await cloudReq(`${cloud.url}/rest/v1/kv`, {
       method: 'POST',
       headers: sbHeaders({ 'Prefer': 'resolution=merge-duplicates' }),
       body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
     });
-    return r.ok;
+    return !!(r && r.ok);
   } catch (_) { return false; }
 }
 
@@ -651,10 +662,18 @@ function savePresets(list) {
 }
 let presets = loadPresets();
 
-// 若开启云端持久化，启动后异步用云端最新数据覆盖本地（云端优先）
+// 若开启云端持久化，启动后异步用云端最新数据覆盖本地（云端优先）。
+// Supabase 免费层可能处于休眠态，首请求会超时失败；故多重试几次"唤醒"后再拉取，
+// 确保冷启动（Render/Supabase 双重冷启）后也能恢复云端数据，避免表现成"接不上数据库"。
 if (CLOUD_ENABLED) {
-  cloudGet('leaderboard', null).then((v) => { if (v && typeof v === 'object') leaderboard = v; });
-  cloudGet('presets', null).then((v) => { if (Array.isArray(v) && v.length) presets = v; });
+  const pullCloud = async (key, apply, attempt = 1) => {
+    const v = await cloudGet(key, null);
+    if (v !== null) { apply(v); return; }
+    if (attempt < 5) setTimeout(() => pullCloud(key, apply, attempt + 1), 1500 * attempt);
+    else console.warn(`[cloud] 启动拉取 ${key} 多次失败（可能云端暂时不可达），已退回本地数据`);
+  };
+  pullCloud('leaderboard', (v) => { if (v && typeof v === 'object') leaderboard = v; });
+  pullCloud('presets', (v) => { if (Array.isArray(v) && v.length) presets = v; });
 }
 
 // ===================== 后台管理（密码保护） =====================
